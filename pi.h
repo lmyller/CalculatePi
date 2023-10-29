@@ -32,11 +32,38 @@ typedef char String[STRING_DEFAULT_SIZE];
 // Nome do arquivo.
 typedef char FileName[FILE_NAME_SIZE];
 
+// Nome do programa
 #define PROGRAM_NAME "Cálculo do Número π"
 
+// Mensagem 1 do processo pai
 #define MESSAGE_1 "Criando os processos filhos pi1 e pi2..."
 
+// Mensagem 2 do processo pai
 #define MESSAGE_2 "Processo pai (PID %d) finalizou sua execução."
+
+// Nome do arquivo
+#define FILE_NAME "Processo%d.txt"
+
+// Identificação do processo filho na estrutura "Report"
+#define PROCESS_REPORT_IDENTIFICATION "Processo Filho: pi%d (PID %ld)"
+
+// Número de threads na estrutura "Report"
+#define PROCESS_REPORT_NUMBER_OF_THREADS "Nº de threads: %d"
+
+// Início do processo filho na estrutura "Report"
+#define PROCESS_REPORT_START "Início: %s"
+
+// Encerramento do processo filho na estrutura "Report"
+#define PROCESS_REPORT_END "Fim: %s"
+
+// Duração do processo filho na estrutura "Report"
+#define PROCESS_REPORT_DURATION "Duração: %.2f s"
+
+// Soma total na estrutura "Repor"
+#define PROCESS_REPORT_PI "Pi = %.9f"
+
+// Descrição no arquivo gerado pelo processo
+#define DESCRIPTION_FILE "Tempo em segundos das 16 threads do processo filho pi%d"
 
 // Estrutura do relatório a ser gerado pelo processo.
 typedef struct {
@@ -57,7 +84,10 @@ typedef struct {
       programName, // Cálculo do Número π
       message1, // Criando os processos filhos pi1 e pi2...
       message2; // Processo pai (PID 6923) finalizou sua execução.
-      
+   
+   unsigned short processNumber;  // Número do processo
+   unsigned char *showProgramName;
+   
    ProcessReport processReport1, processReport2;     
 } Report;
 
@@ -69,15 +99,18 @@ typedef struct  {
 } Thread;
 
 typedef struct {
-   double sum;
-   double time;
+   pthread_t threadID; // Identificação da thread.
+   pid_t tid;          // TID da thread
+   double sum;         // Soma calculada na thread.
+   double time;        // Tempo de execução da thread
 } ThreadResponse;
 
 typedef struct 
 {
-   unsigned long int nanosec;
-   unsigned short sec;
-
+   unsigned short hour;       // Hora
+   unsigned short min;        // Minuto
+   unsigned int sec;          // Segundo
+   unsigned long int milisec; // Milisegundo
 } CurrentTime;
 
 // Relação de threads do processo filho.
@@ -120,11 +153,32 @@ void* sumPartial(void *terms);
 */
 double calculationOfNumberPi(unsigned int terms);
 
+//Cria area de memória compartilhada
+int createSharedMemory();
+
+//Retorna um unsigned char anexado na área de memória compartilhada
+unsigned char *attachedSegmentMemory(int segmentId);
+
+//Desconecta da área de memória compartilhada
+void desconnectSharedMemory(unsigned char *showProgramName);
+
+// Obtém os dados do processo pai e armazena em uma estrutura "Report".
 void getReport(Report *report);
 
+// Executa as funções do processo filho, recebe uma estrutura report com os dados do processo pai.
+void childProcess(Report report, int segmentId);
+
+// Obtém a hora atual, retorna uma estrutura "CurrentTime".
 CurrentTime getTime();
 
+// Obtém a hora atual em formato de um vetor de caracteres(string), recebe o tempo.
+char* getTimeString(CurrentTime currentTime);   
+
+// Obtém a diferença de tempo entre duas estruturas "CurrenTime", retorna a diferença em segundos.
 double getDiffTime(const CurrentTime start, const CurrentTime end);
+
+// Obtém o tempo total de execução das threads, recebe as estruturas do tipo thread e retorna o tempo total.
+float getTotalTime(const Threads threads);
 
 // Cria o processo
 pid_t createProcess();
